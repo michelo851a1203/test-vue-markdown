@@ -10,7 +10,6 @@ const markdownToHtml = computed(() => {
   return convertedStringFromMarkdown;
 });
 
-
 const insertAtCursor = (insertText: string) => {
   const markdownTextAreaOrNull = markdownTextArea.value;
   if (markdownTextAreaOrNull === null) return;
@@ -24,8 +23,6 @@ const insertAtCursor = (insertText: string) => {
   inputMarkdown.value += insertText;
 }
 
-
-
 </script>
 
 <template>
@@ -33,7 +30,7 @@ const insertAtCursor = (insertText: string) => {
     class="w-full box-border flex flex-col border border-gray-300 border-2"
   >
     <div
-      class="w-full box-border px-3 py-2 border-b-2 border-gray-300 space-x-3"
+      class="w-full box-border px-3 py-2 border-b-2 border-gray-300 space-x-3 flex items-center"
     >
       <button
         class="i-fa6-solid-b font-bold w-5 h-5 cursor-pointer"
