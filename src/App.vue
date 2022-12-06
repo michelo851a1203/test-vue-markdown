@@ -64,6 +64,10 @@ const insertAtCursor = (insertText: string) => {
       >
       </button>
       <button
+        class="i-ph-text-h-bold font-bold w-6 h-6 cursor-pointer"
+      >
+      </button>
+      <button
         class="i-mingcute-link-fill font-bold w-6 h-6 cursor-pointer"
       >
       </button>
