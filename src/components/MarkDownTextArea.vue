@@ -1,5 +1,17 @@
 <script setup lang="ts">
 import { useMarkDownTextArea } from '../composable/markdownTextArea';
+
+const props = withDefaults(defineProps<{
+  insertedImageLink: string;
+}>(), {
+  insertedImageLink: '',
+});
+
+const emit = defineEmits<{
+  (e: 'update:insertedImageLink', insertedImageLink: string): void;
+}>();
+
+
 const {
   inputMarkdown,
   markdownTextArea,
@@ -16,6 +28,7 @@ const {
   addLinkBlock,
   addImgBlock,
 } = useMarkDownTextArea()
+
 </script>
 
 <template>

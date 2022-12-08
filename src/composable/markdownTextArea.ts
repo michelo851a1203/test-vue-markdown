@@ -155,35 +155,108 @@ export function useMarkDownTextArea(
     const textArea = textAreaRef.value;
     if (isSelectedTextAreaText()) return;
     appendSlashBlockLastLine()
-
   }
 
-  const addBlockQuoteBlock = () => {
+  const appendBlockQuoteBlockLastLine = () => {
+    const textArea = textAreaRef.value;
+    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    if (inputMarkdown.value.length === 0) {
+      inputMarkdown.value += `>${tip}`;
+    } else {
+      inputMarkdown.value += `  \n>${tip}`;
+    }
 
+    setTimeout(() => {
+      const cursorEndPosition = inputMarkdown.value.length;
+      const cursorStartPosition = inputMarkdown.value.length - tip.length;
+      textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
+      textArea.focus();
+    }, 0);
+  }
+
+
+  const addBlockQuoteBlock = () => {
+    const textArea = textAreaRef.value;
+    if (isSelectedTextAreaText()) return;
+    appendBlockQuoteBlockLastLine()
   }
 
   const unknownUsageBlock = () => {
-    const markdownResult = new MarkdownIt();
-    markdownResult.use(markDownUnderline);
-    markdownResult.renderInline('++')
-
-
   }
 
   const addNumberListBlock = () => {
 
   }
 
-  const addDotListBlock = () => {
+  const appendDotListBlockLastLine = () => {
+    const textArea = textAreaRef.value;
+    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    if (inputMarkdown.value.length === 0) {
+      inputMarkdown.value += `- ${tip}`;
+    } else {
+      inputMarkdown.value += `  \n- ${tip}`;
+    }
 
+    setTimeout(() => {
+      const cursorEndPosition = inputMarkdown.value.length;
+      const cursorStartPosition = inputMarkdown.value.length - tip.length;
+      textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
+      textArea.focus();
+    }, 0);
+  }
+
+  const addDotListBlock = () => {
+    const textArea = textAreaRef.value;
+    if (isSelectedTextAreaText()) return;
+    appendDotListBlockLastLine()
+  }
+
+
+  const appendHeaderBlockLastLine = () => {
+    const textArea = textAreaRef.value;
+    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    if (inputMarkdown.value.length === 0) {
+      inputMarkdown.value += `# ${tip}`;
+    } else {
+      inputMarkdown.value += `  \n# ${tip}`;
+    }
+
+    setTimeout(() => {
+      const cursorEndPosition = inputMarkdown.value.length;
+      const cursorStartPosition = inputMarkdown.value.length - tip.length;
+      textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
+      textArea.focus();
+    }, 0);
   }
 
   const addHeaderBlock = () => {
+    const textArea = textAreaRef.value;
+    if (isSelectedTextAreaText()) return;
+    appendHeaderBlockLastLine()
+  }
 
+  const appendLinkBlockLastLine = () => {
+    const textArea = textAreaRef.value;
+    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const linkContent = '(https://)';
+    if (inputMarkdown.value.length === 0) {
+      inputMarkdown.value += `[${tip}]${linkContent}`;
+    } else {
+      inputMarkdown.value += `  \n# [${tip}]${linkContent}`;
+    }
+
+    setTimeout(() => {
+      const cursorEndPosition = inputMarkdown.value.length - linkContent.length -1;
+      const cursorStartPosition = cursorEndPosition - tip.length;
+      textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
+      textArea.focus();
+    }, 0);
   }
 
   const addLinkBlock = () => {
-
+    const textArea = textAreaRef.value;
+    if (isSelectedTextAreaText()) return;
+    appendLinkBlockLastLine()
   }
 
   const addImgBlock = () => {
