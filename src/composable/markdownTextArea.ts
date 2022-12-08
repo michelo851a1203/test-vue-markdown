@@ -1,7 +1,6 @@
 import { ref, Ref, computed, ComputedRef } from 'vue';
 import MarkdownIt from 'markdown-it';
-import Token from 'markdown-it/lib/token';
-import Renderer from 'markdown-it/lib/renderer';
+import { RenderRule } from 'markdown-it/lib/renderer';
 
 export interface UseMarkdownTextAreaOptions {
   BoldTextInputTip?: string;
@@ -13,23 +12,19 @@ export function useMarkDownTextArea(
   const markdownTextArea: Ref<HTMLTextAreaElement | null> = ref(null);
   const inputMarkdown = ref('');
 
-  const underlinePlugins = (
-    tokens: Token[],
-    idx: number,
-    options: MarkdownIt.Options,
-    _: any,
-    self: Renderer 
-  ): string =>  {
-    const token = tokens[idx];
-    if (token.markup === '+') {
-      token.tag = 'u';
+  const markdownUnderline = (renderHtml: string): RenderRule => {
+    return (tokens, idx, opts, _, self) => {
+      const token = tokens[idx];
+      if (token.markup === '_') {
+        token.tag = renderHtml;
+      }
+      return self.renderToken(tokens, idx, opts);
     }
-    return self.renderToken(tokens, idx, options);
   }
 
   const markDownUnderline = (md: MarkdownIt): void => {
-    md.renderer.rules.em_open = underlinePlugins;
-    md.renderer.rules.em_close = underlinePlugins;
+    md.renderer.rules.em_open = markdownUnderline('u');
+    md.renderer.rules.em_close = markdownUnderline('u');
   }
 
   const markdownToHtml = computed(() => {
@@ -115,8 +110,27 @@ export function useMarkDownTextArea(
     appendItalicBlockLastLine()
   }
 
+  const appendUnderlineBlockLastLine = () => {
+    const textArea = textAreaRef.value;
+    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    if (inputMarkdown.value.length === 0) {
+      inputMarkdown.value += `_${tip}_`;
+    } else {
+      inputMarkdown.value += `  \n_${tip}_`;
+    }
+
+    setTimeout(() => {
+      const cursorEndPosition = inputMarkdown.value.length - 1;
+      const cursorStartPosition = inputMarkdown.value.length - 1 - tip.length;
+      textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
+      textArea.focus();
+    }, 0);
+  }
+
   const addUnderlineBlock = () => {
-    console.log('add underline block');
+    const textArea = textAreaRef.value;
+    if (isSelectedTextAreaText()) return;
+    appendUnderlineBlockLastLine()
   }
 
 
