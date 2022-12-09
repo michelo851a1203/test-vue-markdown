@@ -11,6 +11,7 @@ export function useMarkDownTextArea(
 ) {
   const markdownTextArea: Ref<HTMLTextAreaElement | null> = ref(null);
   const inputMarkdown = ref('');
+  const defaultNoneText = '(這裡輸入文字)';
 
   const markdownUnderline = (renderHtml: string): RenderRule => {
     return (tokens, idx, opts, _, self) => {
@@ -42,9 +43,7 @@ export function useMarkDownTextArea(
   });
 
   const insertAtCursor = (insertText: string) => {
-    const markdownTextAreaOrNull = markdownTextArea.value;
-    if (markdownTextAreaOrNull === null) return;
-    const textArea = markdownTextAreaOrNull as HTMLTextAreaElement;
+    const textArea = textAreaRef.value;
     if (textArea.selectionStart || textArea.selectionStart === 0) {
       const startPosition = textArea.selectionStart;
       const endPosition = textArea.selectionEnd;
@@ -54,9 +53,45 @@ export function useMarkDownTextArea(
     inputMarkdown.value += insertText;
   }
 
+  const insertNotationBetweenText = (notationText: string) => {
+    const textArea = textAreaRef.value;
+    const startPosition = textArea.selectionStart;
+    const endPosition = textArea.selectionEnd;
+    const beforeString = textArea.value.substring(0, startPosition);
+    const betweenString = textArea.value.substring(startPosition, endPosition);
+    const afterString = textArea.value.substring(endPosition, textArea.value.length);
+    inputMarkdown.value = `${beforeString}${notationText}${betweenString}${notationText}${afterString}`;
+  }
+
+  const getSelectionText = (): string => {
+    const textArea = textAreaRef.value;
+    const start = textArea.selectionStart;
+    const end = textArea.selectionEnd;
+    return textArea.value.substring(start, end);
+  }
+
   const checkIsMultipleLine = () => {
     const regularExpression = new RegExp('\n','gm')
     return regularExpression.test(inputMarkdown.value);
+  }
+
+  const getCurrentLineNumber = () => {
+    const textArea = textAreaRef.value;
+    const cursorStartPosition = textArea.selectionStart;
+    const fromStartString = textArea.value
+      .substring(0, cursorStartPosition)
+      .split(/\r?\n|\r/);
+
+    return fromStartString.length;
+  }
+
+  const getCurrentLineString = () => {
+    const textArea = textAreaRef.value;
+    const currentNumber = getCurrentLineNumber();
+    const allStringArray = textArea.value
+      .split(/\r?\n|\r/);
+
+    return allStringArray[currentNumber -1];
   }
 
   const isSelectedTextAreaText = () => {
@@ -66,7 +101,7 @@ export function useMarkDownTextArea(
 
   const appendBoldBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `**${tip}**`;
     } else {
@@ -82,14 +117,16 @@ export function useMarkDownTextArea(
   }
 
   const addBoldBlock = () => {
-    const textArea = textAreaRef.value;
-    if (isSelectedTextAreaText()) return;
+    if (isSelectedTextAreaText()) {
+      insertNotationBetweenText('**');
+      return;
+    }
     appendBoldBlockLastLine()
   }
 
   const appendItalicBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `*${tip}*`;
     } else {
@@ -105,14 +142,16 @@ export function useMarkDownTextArea(
   }
 
   const addItalicBlock = () => {
-    const textArea = textAreaRef.value;
-    if (isSelectedTextAreaText()) return;
+    if (isSelectedTextAreaText()) {
+      insertNotationBetweenText('*');
+      return;
+    }
     appendItalicBlockLastLine()
   }
 
   const appendUnderlineBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `_${tip}_`;
     } else {
@@ -128,15 +167,16 @@ export function useMarkDownTextArea(
   }
 
   const addUnderlineBlock = () => {
-    const textArea = textAreaRef.value;
-    if (isSelectedTextAreaText()) return;
+    if (isSelectedTextAreaText()) {
+      insertNotationBetweenText('_');
+      return;
+    }
     appendUnderlineBlockLastLine()
   }
 
-
   const appendSlashBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `~~${tip}~~`;
     } else {
@@ -152,14 +192,16 @@ export function useMarkDownTextArea(
   }
 
   const addSlashLineBlock = () => {
-    const textArea = textAreaRef.value;
-    if (isSelectedTextAreaText()) return;
+    if (isSelectedTextAreaText()) {
+      insertNotationBetweenText('~~');
+      return;
+    }
     appendSlashBlockLastLine()
   }
 
   const appendBlockQuoteBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `>${tip}`;
     } else {
@@ -176,7 +218,6 @@ export function useMarkDownTextArea(
 
 
   const addBlockQuoteBlock = () => {
-    const textArea = textAreaRef.value;
     if (isSelectedTextAreaText()) return;
     appendBlockQuoteBlockLastLine()
   }
@@ -184,13 +225,32 @@ export function useMarkDownTextArea(
   const unknownUsageBlock = () => {
   }
 
-  const addNumberListBlock = () => {
 
+  const appendNumberListBlockLastLine = (currentNumber: number) => {
+    const textArea = textAreaRef.value;
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    if (inputMarkdown.value.length === 0) {
+      inputMarkdown.value += `${currentNumber}. ${tip}`;
+    } else {
+      inputMarkdown.value += `  \n${currentNumber}. ${tip}`;
+    }
+
+    setTimeout(() => {
+      const cursorEndPosition = inputMarkdown.value.length;
+      const cursorStartPosition = inputMarkdown.value.length - tip.length;
+      textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
+      textArea.focus();
+    }, 0);
+  }
+
+  const addNumberListBlock = () => {
+    if (isSelectedTextAreaText()) return;
+    appendNumberListBlockLastLine(1)
   }
 
   const appendDotListBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `- ${tip}`;
     } else {
@@ -211,10 +271,9 @@ export function useMarkDownTextArea(
     appendDotListBlockLastLine()
   }
 
-
   const appendHeaderBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `# ${tip}`;
     } else {
@@ -229,15 +288,52 @@ export function useMarkDownTextArea(
     }, 0);
   }
 
+  const isCurrentHeaderOnTagLine = (
+    inputText: string,
+    numberOfHeaderNotion: number,
+  ) => {
+    let currentSharpNotion = '';
+    for (let i = 0; i < numberOfHeaderNotion; i++) {
+      currentSharpNotion += '#'
+    }
+
+    const headerRegularExpression = new RegExp(`^${currentSharpNotion}`)
+    return headerRegularExpression.test(inputText);
+  }
+
+  const getHeaderTagNumberOnCurrentLine = (maxHeaderNotionNumber: number): number => {
+    const currentSelectedText = getCurrentLineString()
+    let currentHeaderTagCountAddOne = 1;
+
+    while(
+      isCurrentHeaderOnTagLine(currentSelectedText, currentHeaderTagCountAddOne) && 
+      currentHeaderTagCountAddOne <= (maxHeaderNotionNumber + 1)
+    ) {
+      currentHeaderTagCountAddOne++;
+    }
+    const currentHeaderTagCount= currentHeaderTagCountAddOne - 1;
+    return currentHeaderTagCount;
+  }
+
   const addHeaderBlock = () => {
-    const textArea = textAreaRef.value;
     if (isSelectedTextAreaText()) return;
-    appendHeaderBlockLastLine()
+    const maxHeaderNotionNumber = 6;
+    const currentHeaderTagCount = getHeaderTagNumberOnCurrentLine(maxHeaderNotionNumber);
+
+    if (currentHeaderTagCount === 0) {
+      appendHeaderBlockLastLine()
+    }
+
+    if (currentHeaderTagCount === maxHeaderNotionNumber) {
+      // remove all headerTag
+      return;
+    }
+    // append tag on 
   }
 
   const appendLinkBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? '(這裡輸入文字)';
+    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
     const linkContent = '(https://)';
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `[${tip}]${linkContent}`;
@@ -254,13 +350,13 @@ export function useMarkDownTextArea(
   }
 
   const addLinkBlock = () => {
-    const textArea = textAreaRef.value;
     if (isSelectedTextAreaText()) return;
     appendLinkBlockLastLine()
   }
 
   const addImgBlock = () => {
-
+    // insertAtCursor('hello testing');
+    insertNotationBetweenText('testing cool');
   }
   
 
