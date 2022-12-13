@@ -77,7 +77,19 @@ export function useMarkDownTextArea(
     return regularExpression.test(inputMarkdown.value);
   }
 
-  const getCurrentLineNumber = () => {
+  const getAllStringArraySplitWithLine = (): string[] => {
+    const textArea = textAreaRef.value;
+    const allStringArray = textArea.value
+      .split(/\r?\n|\r/);
+    return allStringArray;
+  }
+
+  const combineStringArrayToMultipleLine = (inputStringArray: string[]) => {
+    const combinedString = inputStringArray.join('\n');
+    return combinedString;
+  }
+
+  const getCurrentLineNumber = (): number => {
     const textArea = textAreaRef.value;
     const cursorStartPosition = textArea.selectionStart;
     const fromStartString = textArea.value
@@ -88,11 +100,8 @@ export function useMarkDownTextArea(
   }
 
   const getCurrentLineString = () => {
-    const textArea = textAreaRef.value;
     const currentNumber = getCurrentLineNumber();
-    const allStringArray = textArea.value
-      .split(/\r?\n|\r/);
-
+    const allStringArray = getAllStringArraySplitWithLine()
     return allStringArray[currentNumber -1];
   }
 
@@ -316,6 +325,39 @@ export function useMarkDownTextArea(
     return currentHeaderTagCount;
   }
 
+  const addExtraTagOnHeaderTagLine = (numberOfHeaderTag: number) => {
+    let currentHeaderTag = ''
+    for (let i = 0; i < numberOfHeaderTag; i++) {
+      currentHeaderTag += '#';
+    }
+    const currentLineNumber = getCurrentLineNumber();
+    const currentLineString = getCurrentLineString();
+    const allLineStringArray = getAllStringArraySplitWithLine();
+
+    const startHeaderRegularExpression = new RegExp(`^${currentHeaderTag}`);
+    allLineStringArray[currentLineNumber - 1] = currentLineString
+      .replace(startHeaderRegularExpression, `${currentHeaderTag}#`);
+
+    inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
+  }
+
+  const removeExtraTagOnHeaderTagLine = (numberOfHeaderTag: number) => {
+    let currentHeaderTag = ''
+    for (let i = 0; i < numberOfHeaderTag; i++) {
+      currentHeaderTag += '#';
+    }
+    const currentLineNumber = getCurrentLineNumber();
+    const currentLineString = getCurrentLineString();
+    const allLineStringArray = getAllStringArraySplitWithLine();
+
+    const startHeaderRegularExpression = new RegExp(`^${currentHeaderTag}`);
+    allLineStringArray[currentLineNumber - 1] = currentLineString
+      .replace(startHeaderRegularExpression, '');
+
+    inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
+  }
+
+
   const addHeaderBlock = () => {
     if (isSelectedTextAreaText()) return;
     const maxHeaderNotionNumber = 6;
@@ -323,13 +365,15 @@ export function useMarkDownTextArea(
 
     if (currentHeaderTagCount === 0) {
       appendHeaderBlockLastLine()
+      return;
     }
 
     if (currentHeaderTagCount === maxHeaderNotionNumber) {
-      // remove all headerTag
+      removeExtraTagOnHeaderTagLine(currentHeaderTagCount);
       return;
     }
-    // append tag on 
+
+    addExtraTagOnHeaderTagLine(currentHeaderTagCount);
   }
 
   const appendLinkBlockLastLine = () => {
