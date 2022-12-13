@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useMarkDownTextArea } from '../composable/markdownTextArea';
+import { watch } from 'vue';
 
 const props = withDefaults(defineProps<{
   insertedImageLink: string;
@@ -8,6 +9,7 @@ const props = withDefaults(defineProps<{
 });
 
 const emit = defineEmits<{
+  (e: 'update:callInsertImageInterface'): void;
   (e: 'update:insertedImageLink', insertedImageLink: string): void;
 }>();
 
@@ -28,6 +30,21 @@ const {
   addLinkBlock,
   addImgBlock,
 } = useMarkDownTextArea()
+
+watch(() => props.insertedImageLink, (insertedImageLink: string) => {
+  if (insertedImageLink === '') return;
+  addImgBlock(insertedImageLink);
+  emptyInsertedImageLink();
+})
+
+const callImageInsertInterface = () => {
+  emit('update:callInsertImageInterface')
+}
+
+const emptyInsertedImageLink = () => {
+  emit('update:insertedImageLink', '')
+}
+
 
 </script>
 
@@ -88,7 +105,7 @@ const {
       >
       </button>
       <button
-        @click="addImgBlock"
+        @click="callImageInsertInterface"
         class="i-material-symbols-broken-image-outline font-bold w-6 h-6 cursor-pointer"
       >
       </button>

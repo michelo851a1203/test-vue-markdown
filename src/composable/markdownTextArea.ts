@@ -4,6 +4,7 @@ import { RenderRule } from 'markdown-it/lib/renderer';
 
 export interface UseMarkdownTextAreaOptions {
   BoldTextInputTip?: string;
+  ImageTextInputTip?: string;
 }
 
 export function useMarkDownTextArea(
@@ -12,6 +13,7 @@ export function useMarkDownTextArea(
   const markdownTextArea: Ref<HTMLTextAreaElement | null> = ref(null);
   const inputMarkdown = ref('');
   const defaultNoneText = '(這裡輸入文字)';
+  const defaultImageDescriptionText = '(請輸入圖片敘述)'
 
   const markdownUnderline = (renderHtml: string): RenderRule => {
     return (tokens, idx, opts, _, self) => {
@@ -266,7 +268,6 @@ export function useMarkDownTextArea(
   }
 
   const addDotListBlock = () => {
-    const textArea = textAreaRef.value;
     if (isSelectedTextAreaText()) return;
     appendDotListBlockLastLine()
   }
@@ -354,11 +355,27 @@ export function useMarkDownTextArea(
     appendLinkBlockLastLine()
   }
 
-  const addImgBlock = () => {
-    // insertAtCursor('hello testing');
-    insertNotationBetweenText('testing cool');
+  const appendImageLinkBlockLastLine = (inputImageLink: string) => {
+    const textArea = textAreaRef.value;
+    const tip = textAreaOptions?.ImageTextInputTip ?? defaultImageDescriptionText;
+    if (inputMarkdown.value.length === 0) {
+      inputMarkdown.value += `![${tip}](${inputImageLink})`;
+    } else {
+      inputMarkdown.value += `  \n![${tip}](${inputImageLink})`;
+    }
+
+    setTimeout(() => {
+      const linkLength = inputImageLink.length;
+      const cursorEndPosition = inputMarkdown.value.length - linkLength - 3;
+      const cursorStartPosition = cursorEndPosition - tip.length;
+      textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
+      textArea.focus();
+    }, 0);
   }
-  
+
+  const addImgBlock = (inputImageLink: string) => {
+    appendImageLinkBlockLastLine(inputImageLink);
+  }
 
   return {
     inputMarkdown,
