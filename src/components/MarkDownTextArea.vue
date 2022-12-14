@@ -23,7 +23,6 @@ const {
   addUnderlineBlock,
   addSlashLineBlock,
   addBlockQuoteBlock,
-  unknownUsageBlock,
   addNumberListBlock,
   addDotListBlock,
   addHeaderBlock,
@@ -77,11 +76,6 @@ const emptyInsertedImageLink = () => {
       <button
         @click="addBlockQuoteBlock"
         class="i-material-symbols-format-quote-rounded font-bold w-6 h-6 cursor-pointer"
-      >
-      </button>
-      <button
-        @click="unknownUsageBlock"
-        class="i-majesticons-underline-2 font-bold w-6 h-6 cursor-pointer"
       >
       </button>
       <button

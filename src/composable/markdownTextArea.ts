@@ -3,8 +3,8 @@ import MarkdownIt from 'markdown-it';
 import { RenderRule } from 'markdown-it/lib/renderer';
 
 export interface UseMarkdownTextAreaOptions {
-  BoldTextInputTip?: string;
-  ImageTextInputTip?: string;
+  defaultTextInputTip?: string;
+  defaultImageInputTipText?: string;
 }
 
 export function useMarkDownTextArea(
@@ -13,7 +13,7 @@ export function useMarkDownTextArea(
   const markdownTextArea: Ref<HTMLTextAreaElement | null> = ref(null);
   const inputMarkdown = ref('');
   const defaultNoneText = '(這裡輸入文字)';
-  const defaultImageDescriptionText = '(請輸入圖片敘述)'
+  const defaultImageNoneText = '(請輸入圖片敘述)'
 
   const markdownUnderline = (renderHtml: string): RenderRule => {
     return (tokens, idx, opts, _, self) => {
@@ -72,7 +72,7 @@ export function useMarkDownTextArea(
     return textArea.value.substring(start, end);
   }
 
-  const checkIsMultipleLine = () => {
+  const isMultipleLine = () => {
     const regularExpression = new RegExp('\n','gm')
     return regularExpression.test(inputMarkdown.value);
   }
@@ -112,7 +112,7 @@ export function useMarkDownTextArea(
 
   const appendBoldBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `**${tip}**`;
     } else {
@@ -137,7 +137,7 @@ export function useMarkDownTextArea(
 
   const appendItalicBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `*${tip}*`;
     } else {
@@ -162,7 +162,7 @@ export function useMarkDownTextArea(
 
   const appendUnderlineBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `_${tip}_`;
     } else {
@@ -187,7 +187,7 @@ export function useMarkDownTextArea(
 
   const appendSlashBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `~~${tip}~~`;
     } else {
@@ -212,7 +212,7 @@ export function useMarkDownTextArea(
 
   const appendBlockQuoteBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `>${tip}`;
     } else {
@@ -233,13 +233,9 @@ export function useMarkDownTextArea(
     appendBlockQuoteBlockLastLine()
   }
 
-  const unknownUsageBlock = () => {
-  }
-
-
   const appendNumberListBlockLastLine = (currentNumber: number) => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `${currentNumber}. ${tip}`;
     } else {
@@ -261,7 +257,7 @@ export function useMarkDownTextArea(
 
   const appendDotListBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `- ${tip}`;
     } else {
@@ -281,15 +277,20 @@ export function useMarkDownTextArea(
     appendDotListBlockLastLine()
   }
 
+  const isCurrentLineEmpty = () => {
+    return getCurrentLineString() === '';
+  }
+
   const appendHeaderBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
-    if (inputMarkdown.value.length === 0) {
-      inputMarkdown.value += `# ${tip}`;
-    } else {
-      inputMarkdown.value += `  \n# ${tip}`;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
+
+    if (!isCurrentLineEmpty()) {
+      addExtraTagOnHeaderTagLine(0);
+      return;
     }
 
+    inputMarkdown.value += `# ${tip}`;
     setTimeout(() => {
       const cursorEndPosition = inputMarkdown.value.length;
       const cursorStartPosition = inputMarkdown.value.length - tip.length;
@@ -357,7 +358,6 @@ export function useMarkDownTextArea(
     inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
   }
 
-
   const addHeaderBlock = () => {
     if (isSelectedTextAreaText()) return;
     const maxHeaderNotionNumber = 6;
@@ -378,7 +378,7 @@ export function useMarkDownTextArea(
 
   const appendLinkBlockLastLine = () => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.BoldTextInputTip ?? defaultNoneText;
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
     const linkContent = '(https://)';
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `[${tip}]${linkContent}`;
@@ -401,7 +401,7 @@ export function useMarkDownTextArea(
 
   const appendImageLinkBlockLastLine = (inputImageLink: string) => {
     const textArea = textAreaRef.value;
-    const tip = textAreaOptions?.ImageTextInputTip ?? defaultImageDescriptionText;
+    const tip = textAreaOptions?.defaultImageInputTipText ?? defaultImageNoneText;
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `![${tip}](${inputImageLink})`;
     } else {
@@ -431,7 +431,6 @@ export function useMarkDownTextArea(
     addUnderlineBlock,
     addSlashLineBlock,
     addBlockQuoteBlock,
-    unknownUsageBlock,
     addNumberListBlock,
     addDotListBlock,
     addHeaderBlock,
