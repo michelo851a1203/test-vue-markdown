@@ -336,8 +336,17 @@ export function useMarkDownTextArea(
     const allLineStringArray = getAllStringArraySplitWithLine();
 
     const startHeaderRegularExpression = new RegExp(`^${currentHeaderTag}`);
+    const isEmptyStartWhiteSpace = /^ /.test(allLineStringArray[currentLineNumber - 1]);
+
+    let HeaderString = '#';
+    if (numberOfHeaderTag === 0 && !isEmptyStartWhiteSpace) {
+      HeaderString = '# ';
+    } else {
+      HeaderString = `${currentHeaderTag}#`
+    }
+
     allLineStringArray[currentLineNumber - 1] = currentLineString
-      .replace(startHeaderRegularExpression, `${currentHeaderTag}#`);
+      .replace(startHeaderRegularExpression, HeaderString);
 
     inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
   }
