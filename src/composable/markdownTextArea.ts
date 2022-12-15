@@ -233,14 +233,52 @@ export function useMarkDownTextArea(
     appendBlockQuoteBlockLastLine()
   }
 
-  const appendNumberListBlockLastLine = (currentNumber: number) => {
+  const isCurrentStringNumberList = (inputString: string) => {
+    const numberListRegularExpression = new RegExp('^[1-9][0-9]{0,999999}\. |[1-9]\. ');
+    return numberListRegularExpression.test(inputString);
+  }
+
+  const currentNumberListNumber = (inputString: string): number => {
+    const replaceNumberListRegularExpression = new RegExp('^(([1-9][0-9]{0,999999})\. |([1-9])\. ).*$');
+    const getCurrentString = inputString.replace(replaceNumberListRegularExpression, '$2');
+    if (Number.isNaN(Number(getCurrentString))) return -1;
+    return Number(getCurrentString);
+  }
+
+  const setPlainTextToLineNumberList = (setNumber: number) => {
+    const currentLineNumber = getCurrentLineNumber();
+    const allLineStringArray = getAllStringArraySplitWithLine();
+    allLineStringArray[currentLineNumber - 1] = `${setNumber}. ${allLineStringArray[currentLineNumber - 1]}`;
+    inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
+  }
+
+  const numberListTagImplementation = (
+    setNumberListTextHandler: (setNumber: number) => void,
+  ) => {
+    const currentLineNumber = getCurrentLineNumber();
+    const allLineStringArray = getAllStringArraySplitWithLine();
+
+    if (currentLineNumber === 1) {
+      setNumberListTextHandler(1);
+      return;
+    }
+
+    const previousLine = allLineStringArray[currentLineNumber - 2];
+
+    if (!isCurrentStringNumberList(previousLine)) {
+      setNumberListTextHandler(1);
+      return;
+    }
+
+    const previousLineNumber = currentNumberListNumber(previousLine);
+    if (previousLineNumber === -1) return;
+    setNumberListTextHandler(previousLineNumber + 1);
+  }
+
+  const appendNumberListText = (setNumber: number) => {
     const textArea = textAreaRef.value;
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
-    if (inputMarkdown.value.length === 0) {
-      inputMarkdown.value += `${currentNumber}. ${tip}`;
-    } else {
-      inputMarkdown.value += `  \n${currentNumber}. ${tip}`;
-    }
+    inputMarkdown.value += `${setNumber}. ${tip}`;
 
     setTimeout(() => {
       const cursorEndPosition = inputMarkdown.value.length;
@@ -252,7 +290,11 @@ export function useMarkDownTextArea(
 
   const addNumberListBlock = () => {
     if (isSelectedTextAreaText()) return;
-    appendNumberListBlockLastLine(1)
+    if (!isCurrentLineEmpty()) {
+      numberListTagImplementation(setPlainTextToLineNumberList);
+      return
+    }
+    numberListTagImplementation(appendNumberListText);
   }
 
   const appendDotListBlockLastLine = () => {
@@ -272,14 +314,12 @@ export function useMarkDownTextArea(
     }, 0);
   }
 
-  const addDotListBlock = () => {
+  const addDotListBlock = (): void => {
     if (isSelectedTextAreaText()) return;
     appendDotListBlockLastLine()
   }
 
-  const isCurrentLineEmpty = () => {
-    return getCurrentLineString() === '';
-  }
+  const isCurrentLineEmpty = (): boolean => getCurrentLineString() === '';
 
   const appendHeaderBlockLastLine = () => {
     const textArea = textAreaRef.value;
@@ -392,7 +432,7 @@ export function useMarkDownTextArea(
     if (inputMarkdown.value.length === 0) {
       inputMarkdown.value += `[${tip}]${linkContent}`;
     } else {
-      inputMarkdown.value += `  \n# [${tip}]${linkContent}`;
+      inputMarkdown.value += `  \n [${tip}]${linkContent}`;
     }
 
     setTimeout(() => {

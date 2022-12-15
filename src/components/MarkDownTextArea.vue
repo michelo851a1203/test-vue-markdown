@@ -44,7 +44,6 @@ const emptyInsertedImageLink = () => {
   emit('update:insertedImageLink', '')
 }
 
-
 </script>
 
 <template>
