@@ -110,13 +110,60 @@ export function useMarkDownTextArea(
     return textArea.selectionStart !== textArea.selectionEnd;
   }
 
-  const appendBoldBlockLastLine = () => {
+  const getCurrentLinePositionFromCurrentLineStart = (): number => {
+    const textArea = textAreaRef.value;
+    const cursorStartPosition = textArea.selectionStart;
+    const fromStartString = textArea.value
+      .substring(0, cursorStartPosition)
+      .split(/\r?\n|\r/);
+
+
+    let beforeTotalStringLength = 0;
+    let totalLength = 0;
+    fromStartString.forEach((item, index) => {
+      totalLength += item.length;
+      if (index >= fromStartString.length - 1) return;
+      beforeTotalStringLength += item.length;
+    });
+
+    const currentLinePosition = totalLength - beforeTotalStringLength;
+    return currentLinePosition;
+  }
+
+  const checkCurrentInTagReturnIndex = (tag: string): number => {
+    const currentLineString = getCurrentLineString();
+    const splitStringArray = currentLineString.split(tag);
+    const tagLength = tag.length;
+
+    if (splitStringArray.length < 2) return -1;
+    let currentPosition = getCurrentLinePositionFromCurrentLineStart()
+    let currentIndex = -1;
+    let sum = 0
+    splitStringArray.forEach((item, index) => {
+      sum += item.length + tagLength;
+      if (sum > currentPosition && currentIndex === -1) {
+        currentIndex = index;
+        return;
+      }
+    });
+
+    if (currentIndex === 0) return -1;
+    if (currentIndex === splitStringArray.length - 1) return -1;
+    return currentIndex;
+  }
+
+  const appendBoldBlockLastLine = (): void => {
     const textArea = textAreaRef.value;
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
-    if (inputMarkdown.value.length === 0) {
-      inputMarkdown.value += `**${tip}**`;
+
+    if (!isCurrentLineEmpty()) {
+      // inputMarkdown.value += `  \n**${tip}**`;
+      const currentPosition = checkCurrentInTagReturnIndex('**')
+      console.log(currentPosition);
+      // getPosition and remove tag
+      return;
     } else {
-      inputMarkdown.value += `  \n**${tip}**`;
+      inputMarkdown.value += `**${tip}**`;
     }
 
     setTimeout(() => {
@@ -138,15 +185,16 @@ export function useMarkDownTextArea(
   const appendItalicBlockLastLine = () => {
     const textArea = textAreaRef.value;
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
-    if (inputMarkdown.value.length === 0) {
-      inputMarkdown.value += `*${tip}*`;
-    } else {
+
+    if (!isCurrentLineEmpty()) {
       inputMarkdown.value += `  \n*${tip}*`;
+    } else {
+      inputMarkdown.value += `*${tip}*`;
     }
 
     setTimeout(() => {
-      const cursorEndPosition = inputMarkdown.value.length - 2;
-      const cursorStartPosition = inputMarkdown.value.length - 2 - tip.length;
+      const cursorEndPosition = inputMarkdown.value.length - 1;
+      const cursorStartPosition = cursorEndPosition - tip.length;
       textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
       textArea.focus();
     }, 0);
@@ -163,10 +211,11 @@ export function useMarkDownTextArea(
   const appendUnderlineBlockLastLine = () => {
     const textArea = textAreaRef.value;
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
-    if (inputMarkdown.value.length === 0) {
-      inputMarkdown.value += `_${tip}_`;
-    } else {
+
+    if (!isCurrentLineEmpty()) {
       inputMarkdown.value += `  \n_${tip}_`;
+    } else {
+      inputMarkdown.value += `_${tip}_`;
     }
 
     setTimeout(() => {
@@ -188,10 +237,11 @@ export function useMarkDownTextArea(
   const appendSlashBlockLastLine = () => {
     const textArea = textAreaRef.value;
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
-    if (inputMarkdown.value.length === 0) {
-      inputMarkdown.value += `~~${tip}~~`;
-    } else {
+
+    if (!isCurrentLineEmpty()) {
       inputMarkdown.value += `  \n~~${tip}~~`;
+    } else {
+      inputMarkdown.value += `~~${tip}~~`;
     }
 
     setTimeout(() => {
@@ -213,10 +263,11 @@ export function useMarkDownTextArea(
   const appendBlockQuoteBlockLastLine = () => {
     const textArea = textAreaRef.value;
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
-    if (inputMarkdown.value.length === 0) {
-      inputMarkdown.value += `>${tip}`;
-    } else {
+
+    if (!isCurrentLineEmpty()) {
       inputMarkdown.value += `  \n>${tip}`;
+    } else {
+      inputMarkdown.value += `>${tip}`;
     }
 
     setTimeout(() => {
