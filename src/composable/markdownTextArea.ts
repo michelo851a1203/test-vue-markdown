@@ -65,6 +65,23 @@ export function useMarkDownTextArea(
     inputMarkdown.value = `${beforeString}${notationText}${betweenString}${notationText}${afterString}`;
   }
 
+  const insertNotationBetweenTextWithTip = (tag: string) => {
+    const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
+    const textArea = textAreaRef.value;
+    const startPosition = textArea.selectionStart;
+    const endPosition = textArea.selectionEnd;
+    const beforeString = textArea.value.substring(0, startPosition);
+    const afterString = textArea.value.substring(endPosition, textArea.value.length);
+    inputMarkdown.value = `${beforeString}${tag}${tip}${tag}${afterString}`;
+
+    setTimeout(() => {
+      const cursorStartPosition = startPosition + tag.length;
+      const cursorEndPosition = cursorStartPosition + tip.length;
+      textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
+      textArea.focus();
+    }, 0);
+  }
+
   const getSelectionText = (): string => {
     const textArea = textAreaRef.value;
     const start = textArea.selectionStart;
@@ -152,15 +169,40 @@ export function useMarkDownTextArea(
     return currentIndex;
   }
 
+  const removeCurrentLineInnerTag = (tag: string,  position: number) => {
+    if (position === -1) return;
+    const currentLineString = getCurrentLineString();
+    const splitStringArray = currentLineString.split(tag);
+    if (position === 0 || position === splitStringArray.length - 1) return;
+
+    const newCurrentLineString = splitStringArray.reduce((previous, next, index) => {
+      if (position === index || index === (position + 1)) return `${previous}${next}`;
+      return `${previous}${tag}${next}`;
+    });
+
+    const currentLineNumber = getCurrentLineNumber();
+    const allLineStringArray = getAllStringArraySplitWithLine();
+    allLineStringArray[currentLineNumber - 1] = newCurrentLineString;
+
+    inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
+  }
+
+
+  const addExistingCurrentLineTag = (tag: string) => {
+    const currentPosition = checkCurrentInTagReturnIndex(tag)
+    if (currentPosition !== -1) {
+      removeCurrentLineInnerTag(tag, currentPosition);
+      return;
+    }
+    insertNotationBetweenTextWithTip(tag);
+  }
+
   const appendBoldBlockLastLine = (): void => {
     const textArea = textAreaRef.value;
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
 
     if (!isCurrentLineEmpty()) {
-      // inputMarkdown.value += `  \n**${tip}**`;
-      const currentPosition = checkCurrentInTagReturnIndex('**')
-      console.log(currentPosition);
-      // getPosition and remove tag
+      addExistingCurrentLineTag('**');
       return;
     } else {
       inputMarkdown.value += `**${tip}**`;
@@ -187,7 +229,8 @@ export function useMarkDownTextArea(
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
 
     if (!isCurrentLineEmpty()) {
-      inputMarkdown.value += `  \n*${tip}*`;
+      addExistingCurrentLineTag('*');
+      return;
     } else {
       inputMarkdown.value += `*${tip}*`;
     }
@@ -213,7 +256,8 @@ export function useMarkDownTextArea(
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
 
     if (!isCurrentLineEmpty()) {
-      inputMarkdown.value += `  \n_${tip}_`;
+      addExistingCurrentLineTag('_');
+      return;
     } else {
       inputMarkdown.value += `_${tip}_`;
     }
@@ -239,7 +283,8 @@ export function useMarkDownTextArea(
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
 
     if (!isCurrentLineEmpty()) {
-      inputMarkdown.value += `  \n~~${tip}~~`;
+      addExistingCurrentLineTag('~~');
+      return;
     } else {
       inputMarkdown.value += `~~${tip}~~`;
     }
