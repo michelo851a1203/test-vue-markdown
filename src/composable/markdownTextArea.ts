@@ -392,6 +392,13 @@ export function useMarkDownTextArea(
     const currentLineNumber = getCurrentLineNumber();
     const allLineStringArray = getAllStringArraySplitWithLine();
 
+    const currentLineString = getCurrentLineString();
+
+    if (isCurrentStringNumberList(currentLineString)) {
+      removeNumberListIfExist()
+      return;
+    }
+
     if (currentLineNumber === 1) {
       setNumberListTextHandler(1);
       return;
@@ -420,6 +427,15 @@ export function useMarkDownTextArea(
       textArea.setSelectionRange(cursorStartPosition, cursorEndPosition);
       textArea.focus();
     }, 0);
+  }
+
+  const removeNumberListIfExist = () => {
+    const currentLineNumber = getCurrentLineNumber();
+    const allLineStringArray = getAllStringArraySplitWithLine();
+    const replaceNumberListRegularExpression = new RegExp('^([1-9][0-9]{0,999999})\. |([1-9])\. (.*$)');
+    const currentString = allLineStringArray[currentLineNumber - 1];
+    allLineStringArray[currentLineNumber - 1] = currentString.replace(replaceNumberListRegularExpression, '$2')
+    inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
   }
 
   const addNumberListBlock = () => {
