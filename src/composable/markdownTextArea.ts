@@ -7,6 +7,11 @@ export interface UseMarkdownTextAreaOptions {
   defaultImageInputTipText?: string;
 }
 
+export interface FirstBlockInputType {
+  startTag: string;
+  currentLineString: string;
+}
+
 export function useMarkDownTextArea(
   textAreaOptions?: UseMarkdownTextAreaOptions,
 ) {
@@ -169,7 +174,7 @@ export function useMarkDownTextArea(
     return currentIndex;
   }
 
-  const removeCurrentLineInnerTag = (tag: string,  position: number) => {
+  const removeCurrentLineInnerTag = (tag: string, position: number) => {
     if (position === -1) return;
     const currentLineString = getCurrentLineString();
     const splitStringArray = currentLineString.split(tag);
@@ -187,7 +192,6 @@ export function useMarkDownTextArea(
     inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
   }
 
-
   const addExistingCurrentLineTag = (tag: string) => {
     const currentPosition = checkCurrentInTagReturnIndex(tag)
     if (currentPosition !== -1) {
@@ -195,6 +199,39 @@ export function useMarkDownTextArea(
       return;
     }
     insertNotationBetweenTextWithTip(tag);
+  }
+
+  const removeFirstBlock = (firstBlockInput: FirstBlockInputType): string => {
+    const { startTag, currentLineString } = firstBlockInput;
+    const startTagRegularExpression = new RegExp(`^${startTag}(.*$)`);
+    const removeString = currentLineString.replace(startTagRegularExpression, '$1');
+    return removeString;
+  }
+
+  const addFirstBlock = (firstBlockInput: FirstBlockInputType): string => {
+    const { startTag, currentLineString } = firstBlockInput;
+    return `${startTag}${currentLineString}`
+  }
+
+  const isBlockIncludeFirstTag = (firstBlockInput: FirstBlockInputType): boolean => {
+    const { startTag, currentLineString } = firstBlockInput;
+    const startRegularExpression = new RegExp(`^${startTag}.*\$`);
+    return startRegularExpression.test(currentLineString);
+  }
+
+  const addTagOnFirstBlock = (startTag: string) => {
+    const currentLineString = getCurrentLineString();
+    const firstBlockInput: FirstBlockInputType = { startTag, currentLineString };
+
+    const currentLineNumber = getCurrentLineNumber();
+    const allLineStringArray = getAllStringArraySplitWithLine();
+
+    if (isBlockIncludeFirstTag(firstBlockInput)) {
+      allLineStringArray[currentLineNumber - 1] = removeFirstBlock(firstBlockInput);
+    } else {
+      allLineStringArray[currentLineNumber - 1] = addFirstBlock(firstBlockInput);
+    }
+    inputMarkdown.value = combineStringArrayToMultipleLine(allLineStringArray);
   }
 
   const appendBoldBlockLastLine = (): void => {
@@ -310,10 +347,11 @@ export function useMarkDownTextArea(
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
 
     if (!isCurrentLineEmpty()) {
-      inputMarkdown.value += `  \n>${tip}`;
-    } else {
-      inputMarkdown.value += `>${tip}`;
+      addTagOnFirstBlock('>')
+      return;
     }
+
+    inputMarkdown.value += `>${tip}`;
 
     setTimeout(() => {
       const cursorEndPosition = inputMarkdown.value.length;
@@ -396,11 +434,12 @@ export function useMarkDownTextArea(
   const appendDotListBlockLastLine = () => {
     const textArea = textAreaRef.value;
     const tip = textAreaOptions?.defaultTextInputTip ?? defaultNoneText;
-    if (inputMarkdown.value.length === 0) {
-      inputMarkdown.value += `- ${tip}`;
-    } else {
-      inputMarkdown.value += `  \n- ${tip}`;
+    if (!isCurrentLineEmpty()) {
+      addTagOnFirstBlock('- ')
+      return;
     }
+
+    inputMarkdown.value += `- ${tip}`;
 
     setTimeout(() => {
       const cursorEndPosition = inputMarkdown.value.length;
